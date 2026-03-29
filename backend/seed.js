@@ -14,7 +14,7 @@ const doctors = [
     specialization: "Cardiology",
     experience: 12,
     location: "Chicago Medical Center",
-    fees: 150,
+    fees: 1200,
     bio: "Specializing in cardiovascular health and surgery."
   },
   {
@@ -25,7 +25,7 @@ const doctors = [
     specialization: "Dermatology",
     experience: 8,
     location: "New York Dermatology Clinic",
-    fees: 120,
+    fees: 800,
     bio: "Skincare expert focused on clinical dermatology."
   },
   {
@@ -36,7 +36,7 @@ const doctors = [
     specialization: "Neurology",
     experience: 15,
     location: "Metropolis Neurological Institute",
-    fees: 200,
+    fees: 1500,
     bio: "Expert in neurological disorders and brain health."
   }
 ];

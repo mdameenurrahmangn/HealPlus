@@ -19,6 +19,12 @@ const AppointmentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    time: {
+        type: String
+    },
+    doctorName: {
+        type: String
+    },
     status: {
         type: String,
         enum: ['pending', 'confirmed', 'cancelled', 'completed'],
@@ -28,6 +34,17 @@ const AppointmentSchema = new mongoose.Schema({
         type: String
     },
     symptoms: {
+        type: String
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'success', 'failed'],
+        default: 'pending'
+    },
+    paymentId: {
+        type: String
+    },
+    razorpayOrderId: {
         type: String
     },
     rating: {

@@ -175,7 +175,7 @@ const Register = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Consultaion Fees ($)</label>
+                                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Consultaion Fees (₹)</label>
                                         <div className="relative group">
                                             <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                                             <input 

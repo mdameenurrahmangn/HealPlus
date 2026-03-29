@@ -41,7 +41,7 @@ const DoctorCard = ({ doctor }) => {
         <div className="mt-6 pt-6 border-t dark:border-slate-700 flex items-center justify-between">
             <div className="flex flex-col">
                 <span className="text-xs text-slate-400 font-medium">Consultation Fee</span>
-                <span className="text-lg font-bold text-slate-900 dark:text-white">${doctor.fees} <span className="text-xs font-normal text-slate-500">/ session</span></span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">₹{doctor.fees} <span className="text-xs font-normal text-slate-500">/ session</span></span>
             </div>
             <Link 
                 to={`/booking/${doctor._id}`}

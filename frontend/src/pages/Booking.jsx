@@ -6,6 +6,8 @@ import api from '../services/api';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Info, ArrowLeft, ArrowRight, ShieldCheck, Heart, User, MapPin } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import MockPaymentModal from '../components/MockPaymentModal';
 
 const Booking = () => {
     const { doctorId } = useParams();
@@ -14,6 +16,8 @@ const Booking = () => {
     const [selectedSlot, setSelectedSlot] = useState('');
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [orderData, setOrderData] = useState(null);
     const navigate = useNavigate();
 
     const slots = [
@@ -38,27 +42,71 @@ const Booking = () => {
         }
     };
 
+    const { user } = React.useContext(AuthContext);
+
     const handleBooking = async () => {
         if (!selectedSlot) return toast.warning('Please select a time slot');
+        setLoading(true);
+
         try {
-            await api.post('/appointments/book', {
+            // 1. Create Mock Order
+            const { data: order } = await api.post('/payments/order', {
                 doctorId,
-                date: date.toISOString(),
-                slot: selectedSlot,
-                notes,
-                symptoms: notes
+                fees: doctor.fees
             });
-            toast.success('Appointment booked successfully!');
-            navigate('/patient/dashboard');
+
+            setOrderData(order);
+            setIsPaymentModalOpen(true);
+            setLoading(false); // Stop loading for main UI since modal is open
+
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Booking failed');
+            toast.error(error.response?.data?.message || 'Failed to initiate mock payment');
+            setLoading(false);
         }
     };
 
-    if (loading) return <div className="h-screen flex items-center justify-center text-primary-600 font-bold animate-pulse text-2xl">Preparing Consultation...</div>;
+    const handleMockPaymentSuccess = async (response) => {
+        try {
+            const verifyData = {
+                mock_order_id: response.mock_order_id,
+                mock_payment_id: response.mock_payment_id,
+                mock_signature: response.mock_signature,
+                appointmentData: {
+                    doctorId,
+                    date: date.toISOString(),
+                    slot: selectedSlot,
+                    notes,
+                    symptoms: notes
+                }
+            };
+
+            // Verify Mock Payment on Backend
+            const { data } = await api.post('/payments/verify', verifyData);
+
+            if (data.status === 'success') {
+                setTimeout(() => { // Small delay to let success animation show in modal
+                    setIsPaymentModalOpen(false);
+                    toast.success('Mock Payment successful! Appointment confirmed.');
+                    navigate('/patient/dashboard');
+                }, 2000);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Mock payment verification failed');
+            setIsPaymentModalOpen(false);
+        }
+    };
+
+    if (loading && !doctor) return <div className="h-screen flex items-center justify-center text-primary-600 font-bold animate-pulse text-2xl">Preparing Consultation...</div>;
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
+            <MockPaymentModal 
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                amount={doctor?.fees}
+                orderId={orderData?.id}
+                onPaymentComplete={handleMockPaymentSuccess}
+            />
             
             <div className="flex items-center gap-4 mb-10 pb-4 border-b dark:border-slate-800">
                 <button onClick={() => navigate(-1)} className="p-3 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl shadow-sm hover:text-primary-600 transition-colors">
@@ -120,7 +168,7 @@ const Booking = () => {
                      <div className="p-6 bg-primary-600 text-white rounded-3xl shadow-xl shadow-primary-500/30 flex items-center justify-between">
                         <div className="space-y-1">
                             <h4 className="text-white/70 text-[10px] font-bold uppercase tracking-widest leading-none">Consultation Fee</h4>
-                            <p className="text-3xl font-black leading-none">${doctor.fees}</p>
+                            <p className="text-3xl font-black leading-none">₹{doctor.fees}</p>
                         </div>
                         <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                             <Info className="w-6 h-6" />
@@ -175,10 +223,11 @@ const Booking = () => {
                             className="w-full h-40 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all dark:text-white placeholder-slate-400"
                         />
                          <button 
+                            disabled={loading}
                             onClick={handleBooking}
-                            className="w-full mt-10 py-5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-[2rem] font-bold text-xl shadow-2xl hover:bg-primary-600 hover:text-white dark:hover:bg-primary-600 dark:hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                            className="w-full mt-10 py-5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-[2rem] font-bold text-xl shadow-2xl hover:bg-primary-600 hover:text-white dark:hover:bg-primary-600 dark:hover:text-white transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-3"
                         >
-                            Confirm Appointment <div className="w-10 h-10 bg-white/20 dark:bg-black/10 rounded-full flex items-center justify-center"> <ArrowRight className="w-5 h-5" /> </div>
+                            {loading ? 'Processing...' : 'Pay & Confirm Booking'} <div className="w-10 h-10 bg-white/20 dark:bg-black/10 rounded-full flex items-center justify-center"> <ArrowRight className="w-5 h-5" /> </div>
                         </button>
                     </section>
                 </div>
